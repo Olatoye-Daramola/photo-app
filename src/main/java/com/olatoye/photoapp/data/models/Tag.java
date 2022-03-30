@@ -37,7 +37,7 @@ public class Tag {
     private String tagName;
 
     @ManyToMany(fetch = LAZY)
-    @JoinTable(name = "photo_tag", joinColumns = {@JoinColumn(name = "tag_id")},
+    @JoinTable(name = "tags_photo", joinColumns = {@JoinColumn(name = "tag_id")},
             inverseJoinColumns = {@JoinColumn(name = "photo_id")})
     private List<Photo> photos;
 

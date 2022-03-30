@@ -46,7 +46,7 @@ public class Photo {
     private Native imageUploader;
 
     @ManyToMany(cascade = PERSIST)
-    @JoinTable(name = "photo_tag", joinColumns = {@JoinColumn(name = "photo_id")},
+    @JoinTable(name = "photos_tags", joinColumns = {@JoinColumn(name = "photo_id")},
             inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private List<Tag> tags;
 
