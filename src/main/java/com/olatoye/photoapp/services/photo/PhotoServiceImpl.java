@@ -15,10 +15,15 @@ import com.olatoye.photoapp.web.exceptions.NativeNotFoundException;
 import com.olatoye.photoapp.web.exceptions.PhotoAppException;
 import com.olatoye.photoapp.web.exceptions.PhotoNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -51,7 +56,7 @@ public class PhotoServiceImpl implements PhotoService {
         List<Tag> tags = extractTags(photoRequest.getCaption());
 
         String uploaderName = aNative.getFirstName() + "_" + aNative.getLastName();
-        Map<?, ?> uploadedPhoto = uploadPhoto(photoRequest.getImage(), uploaderName);
+        Map<?, ?> uploadedPhoto = uploadPhoto(photoRequest.getImage(), aNative);
 
         Photo photo = photoRepository.save(Photo.builder()
                 .imageUploader(aNative)
@@ -107,8 +112,9 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
-    public PhotoResponse downloadPhoto(PhotoRequest photoRequest) {
-        return null;
+    public ByteArrayResource downloadPhoto(PhotoResponse photoResponse) throws IOException {
+        Path path = Paths.get(photoResponse.getImageUrl());
+        return new ByteArrayResource(Files.readAllBytes(path));
     }
 
     @Override
@@ -146,12 +152,12 @@ public class PhotoServiceImpl implements PhotoService {
         return tags;
     }
 
-    private Map<?, ?> uploadPhoto(MultipartFile multipartFile, String uploaderName) {
+    private Map<?, ?> uploadPhoto(MultipartFile multipartFile, Native aNative) {
         Map<?, ?> uploadResult = new HashMap<>();
         try {
             uploadResult = cloudService.upload(multipartFile.getBytes(), ObjectUtils.asMap(
-                    "folder", "photo_app",
-                    "public_id", uploaderName + multipartFile.getOriginalFilename(), "overwrite", true
+                    "folder", "photo_app/" + aNative.getCohort().getNumber() + "/" + aNative.getUserName(),
+                    "public_id", multipartFile.getOriginalFilename(), "overwrite", true
             ));
         } catch (IOException e) {
             e.printStackTrace();

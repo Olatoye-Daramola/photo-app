@@ -2,6 +2,7 @@ package com.olatoye.photoapp.services.photo;
 
 import com.olatoye.photoapp.dtos.requests.PhotoRequest;
 import com.olatoye.photoapp.dtos.responses.PhotoResponse;
+import org.springframework.core.io.ByteArrayResource;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,7 +15,7 @@ public interface PhotoService {
     List<PhotoResponse> findPhotoByTagName(String tagName);
     List<PhotoResponse> findAllPhotos();
 
-    PhotoResponse downloadPhoto(PhotoRequest photoRequest);
+    ByteArrayResource downloadPhoto(PhotoResponse photoResponse) throws IOException;
 
     String deletePhotoByPhotoId(Long photoId);
     String deletePhotoByNative(Long nativeId);
