@@ -11,6 +11,7 @@ import java.util.Date;
 @Setter
 @Getter
 public class PhotoResponse {
+    private Long imageId;
     private Long imageUploaderId;
     private String imageUrl;
     private int numberOfDownloads;

@@ -9,6 +9,7 @@ public class ModelMapper {
 
     public PhotoResponse map(Photo photo) {
         return PhotoResponse.builder()
+                .imageId(photo.getId())
                 .imageUploaderId(photo.getImageUploader().getId())
                 .imageUrl(photo.getImageUrl())
                 .numberOfDownloads(photo.getNumberOfDownloads())
