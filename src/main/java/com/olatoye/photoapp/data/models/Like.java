@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -14,6 +15,7 @@ import javax.persistence.OneToOne;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import static javax.persistence.GenerationType.AUTO;
@@ -38,6 +40,6 @@ public class Like {
     @OneToOne
     private Native liker;
 
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date dateLiked;
+    @CreationTimestamp
+    private LocalDateTime dateLiked = LocalDateTime.now();
 }

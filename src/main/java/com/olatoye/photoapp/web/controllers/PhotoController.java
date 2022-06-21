@@ -1,7 +1,7 @@
 package com.olatoye.photoapp.web.controllers;
 
-import com.olatoye.photoapp.dtos.requests.PhotoRequest;
-import com.olatoye.photoapp.dtos.responses.PhotoResponse;
+import com.olatoye.photoapp.dtos.requests.PhotoRequestDto;
+import com.olatoye.photoapp.dtos.responses.PhotoResponseDto;
 import com.olatoye.photoapp.services.photo.PhotoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -29,10 +29,10 @@ public class PhotoController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> uploadPhoto(@RequestBody PhotoRequest photoRequest) {
+    public ResponseEntity<?> uploadPhoto(@RequestBody PhotoRequestDto photoRequestDto) {
         try {
-            PhotoResponse photoResponse = photoService.createPhoto(photoRequest);
-            return ResponseEntity.status(CREATED).body(photoResponse);
+            PhotoResponseDto photoResponseDto = photoService.createPhoto(photoRequestDto);
+            return ResponseEntity.status(CREATED).body(photoResponseDto);
         } catch (IOException e) {
             return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
         }
@@ -41,8 +41,8 @@ public class PhotoController {
     @GetMapping("/{photoId}")
     public ResponseEntity<?> findPhotoByPhotoId(@PathVariable("photoId") Long photoId) {
         try {
-            PhotoResponse photoResponse = photoService.findPhotoByPhotoId(photoId);
-            return ResponseEntity.status(FOUND).body(photoResponse);
+            PhotoResponseDto photoResponseDto = photoService.findPhotoByPhotoId(photoId);
+            return ResponseEntity.status(FOUND).body(photoResponseDto);
         } catch (Exception e) {
             return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
         }
@@ -51,8 +51,8 @@ public class PhotoController {
     @GetMapping("/{nativeId}")
     public ResponseEntity<?> findPhotoByUploader(@PathVariable("nativeId") Long nativeId) {
         try {
-            List<PhotoResponse> photoResponse = photoService.findPhotoByNative(nativeId);
-            return ResponseEntity.status(FOUND).body(photoResponse);
+            List<PhotoResponseDto> photoResponseDto = photoService.findPhotoByNative(nativeId);
+            return ResponseEntity.status(FOUND).body(photoResponseDto);
         } catch (Exception e) {
             return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
         }
@@ -61,8 +61,18 @@ public class PhotoController {
     @GetMapping("/{tagName}")
     public ResponseEntity<?> findPhotoByTag(@PathVariable("tagName") String tagName) {
         try {
-            List<PhotoResponse> photoResponse = photoService.findPhotoByTagName(tagName);
-            return ResponseEntity.status(FOUND).body(photoResponse);
+            List<PhotoResponseDto> photoResponseDto = photoService.findPhotoByTagName(tagName);
+            return ResponseEntity.status(FOUND).body(photoResponseDto);
+        } catch (Exception e) {
+            return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{name}")
+    public ResponseEntity<?> findPhotoByNativeName(@PathVariable("name") String name) {
+        try {
+            List<PhotoResponseDto> photoResponseDto = photoService.findPhotoByNativeName(name);
+            return ResponseEntity.status(FOUND).body(photoResponseDto);
         } catch (Exception e) {
             return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
         }
@@ -70,18 +80,19 @@ public class PhotoController {
 
     @GetMapping("")
     public ResponseEntity<?> findAllPhotos() {
+        //        TODO: Make pageable
         try {
-            List<PhotoResponse> photoResponse = photoService.findAllPhotos();
-            return ResponseEntity.status(FOUND).body(photoResponse);
+            List<PhotoResponseDto> photoResponseDto = photoService.findAllPhotos();
+            return ResponseEntity.status(FOUND).body(photoResponseDto);
         } catch (Exception e) {
             return ResponseEntity.status(BAD_REQUEST).body(e.getMessage());
         }
     }
 
     @GetMapping("/download")
-    public ResponseEntity<?> downloadPhoto (@RequestBody PhotoResponse photoResponse) {
+    public ResponseEntity<?> downloadPhoto (@RequestBody PhotoResponseDto photoResponseDto) {
         try {
-            Resource resource = photoService.downloadPhoto(photoResponse);
+            Resource resource = photoService.downloadPhoto(photoResponseDto);
             return ResponseEntity.status(OK)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\""
                             + resource.getFilename() + "\"")

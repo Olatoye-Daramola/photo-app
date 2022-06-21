@@ -1,15 +1,17 @@
 package com.olatoye.photoapp.services.photo;
 
 import com.cloudinary.utils.ObjectUtils;
-import com.olatoye.photoapp.ModelMapper;
+import com.olatoye.photoapp.dtos.requests.PhotoRequestDto;
+import com.olatoye.photoapp.dtos.responses.NativeResponseDto;
+import com.olatoye.photoapp.dtos.responses.PhotoResponseDto;
+import com.olatoye.photoapp.services.nativeFolder.NativeService;
+import com.olatoye.photoapp.utils.ModelMapper;
 import com.olatoye.photoapp.data.models.Native;
 import com.olatoye.photoapp.data.models.Photo;
 import com.olatoye.photoapp.data.models.Tag;
 import com.olatoye.photoapp.data.repositories.NativeRepository;
 import com.olatoye.photoapp.data.repositories.PhotoRepository;
 import com.olatoye.photoapp.data.repositories.TagRepository;
-import com.olatoye.photoapp.dtos.requests.PhotoRequest;
-import com.olatoye.photoapp.dtos.responses.PhotoResponse;
 import com.olatoye.photoapp.services.cloud.CloudService;
 import com.olatoye.photoapp.web.exceptions.NativeNotFoundException;
 import com.olatoye.photoapp.web.exceptions.PhotoAppException;
@@ -32,7 +34,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class PhotoServiceImpl implements PhotoService {
 
     private final PhotoRepository photoRepository;
-    private final NativeRepository nativeRepository;
+    private final NativeService nativeService;
     private final TagRepository tagRepository;
     private final CloudService cloudService;
     private final ModelMapper modelMapper;
@@ -40,24 +42,24 @@ public class PhotoServiceImpl implements PhotoService {
     private Integer numberOfDownloads;
 
     @Autowired
-    public PhotoServiceImpl(PhotoRepository photoRepository, NativeRepository nativeRepository,
+    public PhotoServiceImpl(PhotoRepository photoRepository, NativeService nativeService,
                             CloudService cloudService, ModelMapper modelMapper, TagRepository tagRepository) {
         this.photoRepository = photoRepository;
-        this.nativeRepository = nativeRepository;
+        this.nativeService = nativeService;
         this.tagRepository = tagRepository;
         this.cloudService = cloudService;
         this.modelMapper = modelMapper;
     }
 
     @Override
-    public PhotoResponse createPhoto(PhotoRequest photoRequest) {
-        Native aNative = nativeRepository.findById(photoRequest.getImageUploaderId()).orElseThrow(
-                () -> new NativeNotFoundException("Native cannot be found")
-        );
-        List<Tag> tags = extractTags(photoRequest.getCaption());
+    public PhotoResponseDto createPhoto(PhotoRequestDto photoRequestDto) {
+        NativeResponseDto foundNative = nativeService.findById(photoRequestDto.getImageUploaderId());
+        Native aNative = modelMapper.map(foundNative);
 
-        String uploaderName = aNative.getFirstName() + "_" + aNative.getLastName();
-        Map<?, ?> uploadedPhoto = uploadPhoto(photoRequest.getImage(), aNative);
+        List<Tag> tags = extractTags(photoRequestDto.getCaption());
+
+//        String uploaderName = aNative.getFirstName() + "_" + aNative.getLastName();
+        Map<?, ?> uploadedPhoto = uploadPhoto(photoRequestDto.getImage(), aNative);
 
         Photo photo = photoRepository.save(Photo.builder()
                 .imageUploader(aNative)
@@ -69,7 +71,7 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
-    public PhotoResponse findPhotoByPhotoId(Long photoId) {
+    public PhotoResponseDto findPhotoByPhotoId(Long photoId) {
         Photo foundPhoto = photoRepository.findById(photoId).orElseThrow(
                 () -> new PhotoNotFoundException("Photo with id:" + photoId + " not found")
         );
@@ -77,58 +79,73 @@ public class PhotoServiceImpl implements PhotoService {
     }
 
     @Override
-    public List<PhotoResponse> findPhotoByNative(Long nativeId) {
+    public List<PhotoResponseDto> findPhotoByNative(Long nativeId) {
         List<Photo> foundPhotos = photoRepository.findByImageUploaderId(nativeId);
-        if (foundPhotos == null) return null;
+        if (foundPhotos.isEmpty()) return null;
 
-        List<PhotoResponse> photoResponses = new ArrayList<>();
+        List<PhotoResponseDto> photoResponseDtos = new ArrayList<>();
         for (Photo photo : foundPhotos)
-            photoResponses.add(modelMapper.map(photo));
-        return photoResponses;
+            photoResponseDtos.add(modelMapper.map(photo));
+        return photoResponseDtos;
     }
 
     @Override
-    public List<PhotoResponse> findPhotoByTagName(String tagName) {
+    public List<PhotoResponseDto> findPhotoByNativeName(String firstNameOrLastName) {
+        List<Photo> foundPhotos = photoRepository.findByImageUploaderFirstName(firstNameOrLastName);
+        foundPhotos.addAll(photoRepository.findByImageUploaderLastName(firstNameOrLastName));
+        if (foundPhotos.isEmpty()) return null;
+
+        List<PhotoResponseDto> photoResponseDtos = new ArrayList<>();
+        for (Photo photo : foundPhotos)
+            photoResponseDtos.add(modelMapper.map(photo));
+        return photoResponseDtos;
+    }
+
+    @Override
+    public List<PhotoResponseDto> findPhotoByTagName(String tagName) {
         Tag foundTag = tagRepository.findByTagName(tagName).orElseThrow(
-                () -> new PhotoAppException("Placeholder"));
+                () -> new PhotoAppException("Tag not found"));
 
         List<Photo> foundPhotos = photoRepository.findAll();
         if (foundPhotos.isEmpty()) return null;
 
-        List<PhotoResponse> photoResponses = new ArrayList<>();
+        List<PhotoResponseDto> photoResponseDtos = new ArrayList<>();
         for (Photo photo : foundPhotos) {
             if (photo.getTags().contains(foundTag))
-                photoResponses.add(modelMapper.map(photo));
+                photoResponseDtos.add(modelMapper.map(photo));
         }
-        return photoResponses;
+        return photoResponseDtos;
     }
 
     @Override
-    public List<PhotoResponse> findAllPhotos() {
+    public List<PhotoResponseDto> findAllPhotos() {
         List<Photo> foundPhotos = photoRepository.findAll();
-        List<PhotoResponse> photoResponses = new ArrayList<>();
+        List<PhotoResponseDto> photoResponseDtos = new ArrayList<>();
 
         for (Photo photo : foundPhotos)
-            photoResponses.add(modelMapper.map(photo));
-        return photoResponses;
+            photoResponseDtos.add(modelMapper.map(photo));
+        return photoResponseDtos;
     }
 
     @Override
-    public ByteArrayResource downloadPhoto(PhotoResponse photoResponse) throws IOException {
-        Photo foundPhoto = photoRepository.findById(photoResponse.getImageId()).orElseThrow(
+    public ByteArrayResource downloadPhoto(PhotoResponseDto photoResponseDto) throws IOException {
+        Photo foundPhoto = photoRepository.findById(photoResponseDto.getImageId()).orElseThrow(
                 () -> new PhotoNotFoundException(BAD_REQUEST.toString())
         );
         int downloadCount = foundPhoto.getNumberOfDownloads();
         foundPhoto.setNumberOfDownloads(++downloadCount);
-        PhotoResponse modifiedPhotoResponse = modelMapper.map(foundPhoto);
+        PhotoResponseDto modifiedPhotoResponseDto = modelMapper.map(foundPhoto);
 
-        Path path = Paths.get(modifiedPhotoResponse.getImageUrl());
+        Path path = Paths.get(modifiedPhotoResponseDto.getImageUrl());
         return new ByteArrayResource(Files.readAllBytes(path));
     }
 
     @Override
     public String deletePhotoByPhotoId(Long photoId) {
-        photoRepository.deleteById(photoId);
+        Photo foundPhoto = photoRepository.findById(photoId).orElseThrow(
+                () -> new PhotoNotFoundException("Photo with id:" + photoId + " not found")
+        );
+        photoRepository.deleteById(foundPhoto.getId());
         return "Photo deleted";
     }
 
@@ -150,7 +167,6 @@ public class PhotoServiceImpl implements PhotoService {
                 () -> new PhotoAppException("Placeholder")
         );
 
-        List<PhotoResponse> photoResponses = new ArrayList<>();
         for (Photo photo : foundPhotos)
             if (photo.getTags().contains(foundTag))
                 photoRepository.deleteById(photo.getId());
@@ -167,12 +183,14 @@ public class PhotoServiceImpl implements PhotoService {
     //    Helper Methods
     private List<Tag> extractTags(String caption) {
         List<Tag> tags = new ArrayList<>();
-        String[] wordsArray = caption.split("[ -!@$%^&*()_+=<>';:|\".,?]");
+        String[] wordsArray = caption.split("[ \\[!@$%^&*()_+=<>{}\\]';:|\".,?]");
         for (String word : wordsArray) {
             if (word.startsWith("#")) {
-                String newWord = word.replaceFirst("#", "");
+                String normalisedWord = word
+                        .replaceFirst("#", "")
+                        .toLowerCase();
                 tags.add(Tag.builder()
-                        .tagName(newWord).build());
+                        .tagName(normalisedWord).build());
             }
         }
         return tags;
@@ -182,7 +200,7 @@ public class PhotoServiceImpl implements PhotoService {
         Map<?, ?> uploadResult = new HashMap<>();
         try {
             uploadResult = cloudService.upload(multipartFile.getBytes(), ObjectUtils.asMap(
-                    "folder", "photo_app/" + aNative.getCohort().getNumber() + "/" + aNative.getUserName(),
+                    "folder", "photo_app/" + aNative.getCohort().getCohortNumber() + "/" + aNative.getUserName(),
                     "public_id", multipartFile.getOriginalFilename(), "overwrite", true
             ));
         } catch (IOException e) {

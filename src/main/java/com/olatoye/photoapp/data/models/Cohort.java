@@ -18,6 +18,6 @@ import javax.persistence.Embeddable;
 @AllArgsConstructor
 public class Cohort {
 
-    private String name;
-    private Integer number;
+    private String cohortName;
+    private Integer cohortNumber;
 }

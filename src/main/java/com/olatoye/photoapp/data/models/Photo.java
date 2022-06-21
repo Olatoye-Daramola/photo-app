@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -18,6 +19,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -50,6 +52,6 @@ public class Photo {
             inverseJoinColumns = {@JoinColumn(name = "tag_id")})
     private List<Tag> tags;
 
-    @Temporal(TemporalType.DATE)
-    private Date dateUploaded;
+    @CreationTimestamp
+    private LocalDateTime dateUploaded = LocalDateTime.now();
 }

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -14,6 +15,7 @@ import javax.persistence.Embedded;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import static javax.persistence.GenerationType.AUTO;
@@ -41,6 +43,6 @@ public class Native {
     @Embedded
     private Cohort cohort;
 
-    @Temporal(TemporalType.DATE)
-    private Date dateCreated;
+    @CreationTimestamp
+    private LocalDateTime dateCreated;
 }

@@ -9,6 +9,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,8 +31,8 @@ class NativeRepositoryTest {
         nativeRepository.deleteAll();
 
         Cohort cohortEight = Cohort.builder()
-                .name("Phoenix")
-                .number(8)
+                .cohortName("Phoenix")
+                .cohortNumber(8)
                 .build();
 
 
@@ -47,26 +48,29 @@ class NativeRepositoryTest {
 
     @Test
     void findByCohortNumber() {
-        List<Native> foundNatives = nativeRepository.findByCohortNumber(8);
+        List<Native> foundNatives = nativeRepository.findByCohortCohortNumber(8);
         assertThat(foundNatives.size()).isEqualTo(1);
     }
 
     @Test
     void findByEmail() {
-        List<Native> foundNatives = nativeRepository.findByEmail("n.native1@email.com");
-        assertThat(foundNatives.size()).isEqualTo(1);
+        Optional<Native> foundNative = nativeRepository.findByEmail("n.native1@email.com");
+        assert foundNative.isPresent();
+        assertThat(foundNative.get()).isNotNull();
     }
 
     @Test
     void findByFirstNameAndLastName() {
-        List<Native> foundNatives = nativeRepository.findByFirstName("Native1");
-        assertThat(foundNatives.get(0)).isEqualTo(nativeRepository.findByLastName("native1").get(0));
+        Optional<Native> foundNative = nativeRepository.findByFirstName("Native1");
+        assert foundNative.isPresent();
+        assertThat(foundNative.get()).isNotNull();
     }
 
     @Test
     void findByUserName() {
-        List<Native> foundNatives = nativeRepository.findByUserName("native");
-        assertThat(foundNatives.get(0)).isEqualTo(nativeRepository.findByLastName("native1").get(0));
+        Optional<Native> foundNative = nativeRepository.findByUserName("native");
+        assert foundNative.isPresent();
+        assertThat(foundNative.get()).isNotNull();
     }
 
 //    @Test

@@ -1,21 +1,22 @@
 package com.olatoye.photoapp.services.photo;
 
-import com.olatoye.photoapp.dtos.requests.PhotoRequest;
-import com.olatoye.photoapp.dtos.responses.PhotoResponse;
+import com.olatoye.photoapp.dtos.requests.PhotoRequestDto;
+import com.olatoye.photoapp.dtos.responses.PhotoResponseDto;
 import org.springframework.core.io.ByteArrayResource;
 
 import java.io.IOException;
 import java.util.List;
 
 public interface PhotoService {
-    PhotoResponse createPhoto(PhotoRequest photoRequest) throws IOException;
+    PhotoResponseDto createPhoto(PhotoRequestDto photoRequestDto) throws IOException;
 
-    PhotoResponse findPhotoByPhotoId(Long photoId);
-    List<PhotoResponse> findPhotoByNative(Long nativeId);
-    List<PhotoResponse> findPhotoByTagName(String tagName);
-    List<PhotoResponse> findAllPhotos();
+    PhotoResponseDto findPhotoByPhotoId(Long photoId);
+    List<PhotoResponseDto> findPhotoByNative(Long nativeId);
+    List<PhotoResponseDto> findPhotoByNativeName(String firstNameOrLastName);
+    List<PhotoResponseDto> findPhotoByTagName(String tagName);
+    List<PhotoResponseDto> findAllPhotos();
 
-    ByteArrayResource downloadPhoto(PhotoResponse photoResponse) throws IOException;
+    ByteArrayResource downloadPhoto(PhotoResponseDto photoResponseDto) throws IOException;
 
     String deletePhotoByPhotoId(Long photoId);
     String deletePhotoByNative(Long nativeId);

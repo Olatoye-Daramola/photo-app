@@ -41,8 +41,8 @@ class PhotoRepositoryTest {
         nativeRepository.deleteAll();
 
         Cohort cohortEight = Cohort.builder()
-                .name("Phoenix")
-                .number(8)
+                .cohortName("Phoenix")
+                .cohortNumber(8)
                 .build();
 
         Native aNative = Native.builder()

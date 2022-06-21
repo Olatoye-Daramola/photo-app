@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -15,6 +16,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.TemporalType;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
@@ -36,11 +38,9 @@ public class Tag {
 
     private String tagName;
 
-    @ManyToMany(fetch = LAZY)
-    @JoinTable(name = "tags_photo", joinColumns = {@JoinColumn(name = "tag_id")},
-            inverseJoinColumns = {@JoinColumn(name = "photo_id")})
+    @ManyToMany(mappedBy = "tags", fetch = LAZY)
     private List<Photo> photos;
 
-    @Temporal(TemporalType.DATE)
-    private Date dateCreated;
+    @CreationTimestamp
+    private LocalDateTime dateCreated = LocalDateTime.now();
 }
